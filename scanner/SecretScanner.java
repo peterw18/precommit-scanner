@@ -6,11 +6,15 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class SecretScanner {
+
+    // attributes
     private ArrayList<Secret> exposedSecrets = new ArrayList<Secret>();
     private ArrayList<Key> establishedKeys = new ArrayList<Key>();
     private String directory;
 
     private void loadKeys(){
+        
+        // define all common key regular expressions
         this.establishedKeys.add(new Key("AWS Access Key ID", "AKIA[0-9A-Z]{16}"));
 
         this.establishedKeys.add(new Key("Google API Key", "AIza[0-9A-Za-z\\-_]{35}"));
@@ -26,7 +30,7 @@ public class SecretScanner {
 
         this.establishedKeys.add(new Key("JWT", "eyJ[A-Za-z0-9_-]+\\.eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"));
 
-        this.establishedKeys.add(new Key("SSH Private Key", "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----"));
+        this.establishedKeys.add(new Key("SSH Private Key", "-----BEGIN OPENSSH PRIVATE KEY-----"));
         this.establishedKeys.add(new Key("PGP Private Key Block", "-----BEGIN PGP PRIVATE KEY BLOCK-----"));
 
         this.establishedKeys.add(new Key("RSA Private Key", "-----BEGIN RSA PRIVATE KEY-----"));
@@ -54,6 +58,7 @@ public class SecretScanner {
         this.establishedKeys.add(new Key("Private Key (Generic PEM)", "-----BEGIN PRIVATE KEY-----"));
     }
 
+    // getters and setters
     public ArrayList<Key> getKeys(){
         return this.establishedKeys;
     }
@@ -84,8 +89,10 @@ public class SecretScanner {
 
         // establish the directory
         if (args.length > 0){
+            // get it from cli arguments
             secretScanner.setDirectory(args[0]);
         } else {
+            // get it from stdin
             Scanner scanner = new Scanner(System.in);
 
             System.out.print("Enter directory: ");
@@ -94,6 +101,7 @@ public class SecretScanner {
             scanner.close();
         }
 
+        // add the given keys to the arrayList
         secretScanner.loadKeys();
 
         // create a fileFinder instance
@@ -102,31 +110,42 @@ public class SecretScanner {
         System.out.println("\nDirectory Path: "+new File(fileFinder.getDirectory()).getAbsolutePath());
         
         System.out.println("\nDiscovering all files...");
+
+        // start the timer thread to show users the program is still running
         Thread discoverTimer = new timerThread();
         discoverTimer.start();
 
         // for every file, check if it is reasonable
         ArrayList<File> files = fileFinder.searchDirectory();
 
+        // when finished, end the timer
         discoverTimer.interrupt();
 
         try {
+            // gives time for the program to end the timer thread and run its cleanup
             Thread.sleep(500);
         } catch (InterruptedException e){
             System.out.println("sleep interrupted...");
         }
 
         System.out.println("\nSearching all files...");
+
         if (files != null){
+            // start timer for user
             Thread searchTimer = new timerThread();
             searchTimer.start();
+
+            // for every file that is appropriate
             for (File item : files) {
+                // create a new FileChecker instance and run it over that file
                 FileChecker keyChecker = new FileChecker(item);
                 secretScanner.addSecrets(keyChecker.searchFile(secretScanner.getKeys()));
             }
+            // stop the timer
             searchTimer.interrupt();
 
             try {
+                // allow timer thread to cleanup
                 Thread.sleep(500);
             } catch (InterruptedException e){
                 System.out.println("sleep interrupted...");
@@ -137,6 +156,7 @@ public class SecretScanner {
             // display all secrets to the user
             for (Secret secret : secretScanner.getSecrets()){
 
+                // get the path of the file respective to the given directory
                 Path relativePath = Paths.get(secretScanner.getDirectory()).toAbsolutePath().relativize(Paths.get(secret.getFileName()).toAbsolutePath());
                 System.out.println("\n🚨 "+secret.getKeyData().getKeyFor()+" found on line "+secret.getLineNumber()+" of file "+relativePath);
             }
@@ -146,6 +166,7 @@ public class SecretScanner {
         
         System.out.println("\n\n");
 
+        // exit the program with a code to pass back to the precommit
         System.exit(secretScanner.getSecrets().isEmpty() ? 0 : 1);
     }
 }

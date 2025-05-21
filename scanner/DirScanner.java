@@ -1,5 +1,6 @@
 package scanner;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.io.*;
 
 public class DirScanner {
@@ -39,6 +40,21 @@ public class DirScanner {
         this.files.add(file);
     }
 
+    // returns whether a file contains only ascii characters
+    // if not, assume no key will be present
+    // pure function
+    private static boolean isAsciiFile(File file) throws IOException {
+        try (InputStream is = new FileInputStream(file)) {
+            int b;
+            while ((b = is.read()) != -1) {
+                if (b > 127) return false;
+            }
+        }
+        return true;
+    }
+
+    // lists the files in a directory, recursively
+    // uses a higher order function to go through the directory
     public ArrayList<File> searchDirectory(){
         File dir = new File(getCurrentDirectory());
         if (!dir.isDirectory()) {
@@ -52,31 +68,29 @@ public class DirScanner {
             return null;
         }
 
-        for (File file : files) {
+        Arrays.stream(files).forEach(file -> {
+
             if (file.isFile()) {
                 try {
+
                     if (isAsciiFile(file)) {
                         this.files.add(file);
                     }
+
                 } catch (IOException e) {
                     System.err.printf("Failed to process file: %s (%s)%n", file.getName(), e.getMessage());
                 }
-            } else if (file.isDirectory()){
+
+            } else if (file.isDirectory()) {
+                
+                /* change the current directory to the new folder
+                and iterate over them before continuing */
                 setCurrentDirectory(file.getAbsolutePath());
                 searchDirectory();
             }
-        }
+        });
+
 
         return getFiles();
-    }
-
-    private static boolean isAsciiFile(File file) throws IOException {
-        try (InputStream is = new FileInputStream(file)) {
-            int b;
-            while ((b = is.read()) != -1) {
-                if (b > 127) return false;
-            }
-        }
-        return true;
     }
 }
