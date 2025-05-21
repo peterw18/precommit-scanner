@@ -33,6 +33,7 @@ SCAN_RESULT=$?
 
 # Clean up
 rm -rf "$TMPDIR"
+rm scanner/*.class
 
 # Go back to repo root
 cd ..
