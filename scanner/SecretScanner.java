@@ -11,6 +11,7 @@ public class SecretScanner {
     private ArrayList<Secret> exposedSecrets = new ArrayList<Secret>();
     private ArrayList<Key> establishedKeys = new ArrayList<Key>();
     private String directory;
+    private Integer timer_cleanup_ms = 500;
 
     private void loadKeys(){
         
@@ -65,6 +66,10 @@ public class SecretScanner {
 
     public ArrayList<Secret> getSecrets(){
         return this.exposedSecrets;
+    }
+
+    public Integer getCleanupTime(){
+        return this.timer_cleanup_ms;
     }
 
     public String getDirectory(){
@@ -123,7 +128,7 @@ public class SecretScanner {
 
         try {
             // gives time for the program to end the timer thread and run its cleanup
-            Thread.sleep(500);
+            Thread.sleep(secretScanner.getCleanupTime());
         } catch (InterruptedException e){
             System.out.println("sleep interrupted...");
         }
@@ -146,7 +151,7 @@ public class SecretScanner {
 
             try {
                 // allow timer thread to cleanup
-                Thread.sleep(500);
+                Thread.sleep(secretScanner.getCleanupTime());
             } catch (InterruptedException e){
                 System.out.println("sleep interrupted...");
             }
