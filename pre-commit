@@ -6,7 +6,7 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 # If no files, skip scan
 # no idea how this could happen, but thought better to have it
 if [ -z "$STAGED_FILES" ]; then
-    printf "No files to scan for secrets."
+    printf "\nNo files to scan for secrets.\n"
     exit 0
 fi
 
@@ -14,7 +14,7 @@ fi
 # Compile the java file
 javac scanner/*.java
 if [ $? -ne 0 ]; then
-    echo "Scanner compilation failed. Aborting commit."
+    printf "\nScanner compilation failed. Aborting commit.\n"
     exit 1
 fi
 
@@ -39,9 +39,9 @@ cd ..
 
 # Check result
 if [ "$SCAN_RESULT" -ne 0 ]; then
-    printf "Secret scan failed. Commit blocked.\n\n"
+    printf "\nSecret scan failed. Commit blocked.\n\n"
     exit 1
 fi
 
-printf "No secrets found. Proceeding with commit.\n\n"
+printf "\nNo secrets found. Proceeding with commit.\n\n"
 exit 0
