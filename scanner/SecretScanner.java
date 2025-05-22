@@ -101,7 +101,7 @@ public class SecretScanner {
             Scanner scanner = new Scanner(System.in);
 
             System.out.print("Enter directory: ");
-            secretScanner.setDirectory(scanner.nextLine());
+            secretScanner.setDirectory(Paths.get(scanner.nextLine()).normalize().toString());
 
             scanner.close();
         }
