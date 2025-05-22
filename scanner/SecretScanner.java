@@ -110,7 +110,7 @@ public class SecretScanner {
         secretScanner.loadKeys();
 
         // create a fileFinder instance
-        DirScanner fileFinder = new DirScanner(Paths.get(secretScanner.getDirectory()).normalize().toString());
+        DirScanner fileFinder = new DirScanner(secretScanner.getDirectory().replace("../", ""));
 
         System.out.println("\nDirectory Path: "+new File(fileFinder.getDirectory()).getAbsolutePath());
         
